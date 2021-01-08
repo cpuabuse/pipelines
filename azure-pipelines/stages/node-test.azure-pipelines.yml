@@ -1,0 +1,8 @@
+stages:
+  - stage: node-test
+    jobs:
+      - template: ../jobs/node-every.azure-pipelines.yml
+        parameters:
+          steps:
+            - tempalte: ../steps/node-dependencies.azure-pipelines.yml
+            - template: ../steps/node-test.azure-pipelines.yml

@@ -1,0 +1,17 @@
+parameters:
+  - name: "steps"
+    type: stepList
+    default: []
+
+variables:
+  - template: ../vars/defaults.azure-pipelines.yml
+
+jobs:
+  - job: node-once.${{ variables.defaultVmImage }}-${{ variables.defaultNodeVersion }}
+    pool:
+      vmImage: ${{ variables.defaultVmImage }}
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: ${{ variables.defaultNodeVersion }}
+      - ${{ parameters.steps }}

@@ -1,0 +1,11 @@
+variables:
+  defaultVmImage: ubuntu-latest
+  defaultNodeVersion: "15"
+  vmImages:
+    - ${{ variables.defaultVmImage }}
+    - windows-latest
+    - macOS-latest
+  nodeVersions:
+    - "12"
+    - "14"
+    - ${{ variables.defaultNodeVersion }}

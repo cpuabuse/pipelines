@@ -1,0 +1,2 @@
+steps:
+  - pwsh: npm test
