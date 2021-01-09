@@ -1,0 +1,17 @@
+name: $(SourceBranchName)_$(BuildID)
+
+variables:
+  - group: cpuabuse-public
+
+steps:
+  - pwsh: |
+      $ErrorActionPreference = "Stop"
+      git config user.name $env:GITNAME; if (-not $?) { throw }
+      git config user.email $env:GITEMAIL; if (-not $?) { throw }
+      git checkout main; if (-not $?) { throw }
+      Copy-Item -Path src -Destination dist/release -Recurse
+      git add --all
+      git commit --message "Release: Automated release"; if (-not $?) { throw }
+      git push https://$($env:GITPAT)@dev.azure.com/cpuabuse/cpuabuse-public/_git/pipelines --force; if (-not $?) { throw }
+    env:
+      GITPAT: $(gitPat)

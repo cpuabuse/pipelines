@@ -1,0 +1,18 @@
+parameters:
+  - name: steps
+    type: stepList
+  - name: vmImage
+    type: string
+  - name: nodeVersion
+    type: string
+
+jobs:
+  - job:
+    displayName: Execute in ${{ parameters.vmImage }} on Node.js ${{ parameters.nodeVersion }}
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: ${{ parameters.nodeVersion }}
+      - ${{ parameters.steps }}

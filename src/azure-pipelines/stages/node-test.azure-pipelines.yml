@@ -1,0 +1,17 @@
+parameters:
+  - name: vmImages
+    type: object
+  - name: nodeVersions
+    type: object
+
+stages:
+  - stage:
+    displayName: Test Node.js package
+    jobs:
+      - template: ../jobs/node-every.azure-pipelines.yml
+        parameters:
+          steps:
+            - template: ../steps/node-dependencies.azure-pipelines.yml
+            - template: ../steps/node-test.azure-pipelines.yml
+          vmImages: ${{ parameters.vmImages }}
+          nodeVersions: ${{ parameters.nodeVersions }}

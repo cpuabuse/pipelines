@@ -1,0 +1,17 @@
+parameters:
+  - name: pipeline
+    type: string
+
+extends:
+  template: pipelines/${{ parameters.pipeline }}.azure-pipelines.yml
+  parameters:
+    vmImage: ubuntu-latest
+    vmImages:
+      - ubuntu-latest
+      - windows-latest
+      - macOS-latest
+    nodeVersion: "15.x"
+    nodeVersions:
+      - "12.x"
+      - "14.x"
+      - "15.x"
