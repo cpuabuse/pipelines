@@ -1,0 +1,12 @@
+parameters:
+  - name: stages # the name of the parameter is buildSteps
+    type: stageList # data type is StepList
+    default: [] # default value of buildSteps
+
+stages:
+  - ${{ each stage in parameters.stages }}:
+      - ${{ each pair in stage }}:
+          ${{ if ne(pair.key, 'condition') }}:
+            ${{ pair.key }}: ${{ pair.value }}
+          ${{ if eq(pair.key, 'condition') }}:
+            condition: and(succeeded(), not(and(eq(variables['Build.Reason'], 'IndividualCI'), startsWith(variables['Build.SourceBranchName'], 'dependabot-'))))

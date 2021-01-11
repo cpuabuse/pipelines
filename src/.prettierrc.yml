@@ -1,0 +1,7 @@
+# Specify the line length that the printer will wrap on
+# Preserve yaml for azure pipelines
+overrides:
+  - files: "*.azure-pipelines.yml"
+    options:
+      printWidth: 960
+      singleQuote: true

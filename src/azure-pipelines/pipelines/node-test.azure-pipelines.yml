@@ -9,7 +9,10 @@ parameters:
     type: object
 
 stages:
-  - template: ../stages/node-test.azure-pipelines.yml
+  - template: ../stages/helper-depends-ci-skip.azure-pipelines.yml
     parameters:
-      vmImages: ${{ parameters.vmImages }}
-      nodeVersions: ${{ parameters.nodeVersions }}
+      stages:
+        - template: ../stages/node-test.azure-pipelines.yml
+          parameters:
+            vmImages: ${{ parameters.vmImages }}
+            nodeVersions: ${{ parameters.nodeVersions }}
