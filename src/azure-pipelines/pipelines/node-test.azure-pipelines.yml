@@ -1,15 +1,11 @@
 parameters:
-  - name: vmImage
-    type: string
   - name: vmImages
     type: object
-  - name: nodeVersion
-    type: string
   - name: nodeVersions
     type: object
 
 stages:
-  - template: ../stages/helper-depends-ci-skip.azure-pipelines.yml
+  - template: ../stages/helper-deps-ci-skip.azure-pipelines.yml
     parameters:
       stages:
         - template: ../stages/node-test.azure-pipelines.yml

@@ -1,0 +1,145 @@
+# # common-release job list
+#
+# ## About
+#
+# Common job list for performing releases.
+#
+# ### Jobs flow
+#
+# - Prepare (Depends, bump, commit)
+# - Push
+# - Publish
+#
+# ## Parameters
+#
+# - If `push` set to true, commit(s) are expected to be performed in `buildSteps`
+# - `name` should be globally unique and acceptable for stage/job/step name
+# - `gitNameEnvName`, `gitEmailEnvName`, and `gitPatVarName` are variable keys inside `gitVarGroup` variable group
+# - `publishActions` is a mapped array of `jobList`
+# - `releases` is an array; It may contain a `default` string element, which will release an NPM package from repository root (`defaultNpmVarGroup`, `defaultNpmRegistryEnvName` and `defaultNpmTokenVarName` must be specified); Otherwise it's elements contain the following:
+# 	- `prepareSteps`
+# 	- `publishActions`, which contains:
+# 		- `environment`
+# 		- `publishVarGroupName`
+# 		- `publishJobs`
+# - `releases` will have steps from `publishJobs` extracted, ignoring other job properties
+
+parameters:
+  - name: name
+    type: string
+  - name: vmImages
+    type: object
+  - name: nodeVersions
+    type: object
+  - name: gitVarGroup
+    type: string
+  - name: gitNameEnvName
+    type: string
+  - name: gitEmailEnvName
+    type: string
+  - name: gitPatVarName
+    type: string
+  - name: releases
+    type: object
+    default: [default]
+  - name: defaultNpmVarGroup
+    type: string
+  - name: defaultNpmRegistryEnvName
+    type: string
+  - name: defaultNpmTokenVarName
+    type: string
+
+jobs:
+  - job: ${{ parameters.name }}_build
+    displayName: Build release
+    pool:
+      vmImage: ${{ parameters.vmImages[0] }}
+    variables:
+      - group: ${{ parameters.gitVarGroup }}
+    steps:
+      # Checkout
+      - pwsh: |
+          # Config git
+          git config user.name $env:${{ parameters.gitNameEnvName }}; if (-not $?) { throw }
+          git config user.email $env:${{ parameters.gitEmailEnvName }}; if (-not $?) { throw }
+
+          # Checkout
+          git checkout $(Build.SourceBranchName); if (-not $?) { throw }
+        displayName: Git checkout and config
+
+      # Prepare
+      - ${{ each release in parameters.releases }}:
+          - ${{ if eq(release, 'default') }}:
+              - template: ../steps/node-once.azure-pipelines.yml
+                parameters:
+                  nodeVersions: ${{ parameters.nodeVersions }}
+              - template: ../steps/node-release-prepare.azure-pipelines.yml
+          - ${{ if ne(release, 'default') }}:
+              - ${{ release.prepareSteps }}
+
+      # Push
+      - pwsh: |
+          # Variables
+          [ValidateNotNullOrEmpty()][String]$RepoPushURL = "$(Build.Repository.Uri)" -replace "://", "://$env:GIT_PAT@"
+
+          # Git diff against origin; Should have commits
+          git diff --exit-code origin/$(Build.SourceBranchName); if($?) { throw } # "$?" will return "True" if no changes present
+
+          # Push
+          git push $RepoPushURL --follow-tags; if (-not $?) { throw }
+        displayName: Push
+        env:
+          GIT_PAT: $(${{ parameters.gitPatVarName }})
+
+      # Write artifact
+      - task: PublishPipelineArtifact@1
+        displayName: Write release artifact
+        inputs:
+          artifact: ${{ parameters.name }}_artifact
+
+  # Publish
+  - ${{ each release in parameters.releases }}:
+      - ${{ if eq(release, 'default') }}:
+          - deployment:
+            displayName: Publish release to npm
+            dependsOn: ${{ parameters.name }}_build
+            environment: npm
+            pool:
+              vmImage: ${{ parameters.vmImages[0] }}
+            variables:
+              - group: ${{ parameters.defaultNpmVarGroup }}
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - task: DownloadPipelineArtifact@2
+                      displayName: Read release artifact
+                      inputs:
+                        artifact: ${{ parameters.name }}_artifact
+                    - template: ../steps/node-once.azure-pipelines.yml
+                      parameters:
+                        nodeVersions: ${{ parameters.nodeVersions }}
+                    - template: ../steps/node-release-publish.azure-pipelines.yml
+                      parameters:
+                        npmRegistryEnvName: ${{ parameters.defaultNpmRegistryEnvName }}
+                        npmTokenVarName: ${{ parameters.defaultNpmTokenVarName }}
+      - ${{ if ne(release, 'default') }}:
+          - ${{ each publishAction in release.publishActions }}:
+              - ${{ each job in publishAction.jobs }}:
+                  - deployment:
+                    displayName: Publish release to ${{ publishAction.environment }}
+                    dependsOn: ${{ parameters.name }}_build
+                    environment: ${{ publishAction.environment }}
+                    pool:
+                      vmImage: ${{ parameters.vmImages[0] }}
+                    variables:
+                      - group: ${{ parameters.publishVarGroupName }}
+                    strategy:
+                      runOnce:
+                        deploy:
+                          steps:
+                            - task: DownloadPipelineArtifact@2
+                              displayName: Read release artifact
+                              inputs:
+                                artifact: ${{ parameters.name }}_artifact
+                            - ${{ publishJob.steps }}

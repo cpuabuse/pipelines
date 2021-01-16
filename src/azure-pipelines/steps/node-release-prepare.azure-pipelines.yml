@@ -1,0 +1,65 @@
+# # node-release job
+#
+# ## About
+#
+# Builds NPM releases for not directly dependent packages.
+# Performs a commit and expects git to be configured.
+# Not suitable for monorepos.
+
+parameters:
+  - name: relativePath
+    type: string
+    default: ./
+
+steps:
+  # Dependencies
+  - template: node-deps.azure-pipelines.yml
+    parameters:
+      relativePath: ${{ parameters.relativePath }}
+
+  # Bump
+  - pwsh: |
+      # Push
+      Push-Location -Path ${{ parameters.relativePath }}
+
+      # Variables
+      [ValidateNotNullOrEmpty()][String]$PatchLevel = "patch"
+
+      # Patch, commit and tag
+      npm version $PatchLevel --no-git-tag-version; if (-not $?) { throw }
+
+      # Pop
+      Pop-Location
+    displayName: Bump NPM
+
+  # Commit
+  - pwsh: |
+      # Push location
+      Push-Location ${{ parameters.relativePath }}
+
+      # Variables
+      [ValidateNotNullOrEmpty()][String]$PackageFilePath = "package.json"; `
+        [ValidateNotNullOrEmpty()][String]$Name = (Get-Content -Path $PackageFilePath | ConvertFrom-Json).name; `
+        [ValidateNotNullOrEmpty()][String]$Version = (Get-Content -Path $PackageFilePath | ConvertFrom-Json).version; `
+        [ValidateNotNullOrEmpty()][String]$Tag = "v$Version"; `
+        [ValidateNotNullOrEmpty()][String]$Message = "build(npm): release $Tag"
+
+      # Pop location
+      Pop-Location
+
+      # Commit and tag
+      git commit --all --message $Message --message "[ci skip]"; if (-not $?) { throw }
+      git tag $Tag --message $Message; if (-not $?) { throw }
+    displayName: Commit and tag after NPM release
+
+  # Build
+  - pwsh: |
+      # Push location
+      Push-Location ${{ parameters.relativePath }}
+
+      # Build
+      npm run build
+
+      # Pop location
+      Pop-Location
+    displayName: Build NPM package

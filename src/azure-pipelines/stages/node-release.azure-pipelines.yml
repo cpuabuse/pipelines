@@ -1,0 +1,24 @@
+parameters:
+  - name: name
+    type: string
+  - name: vmImages
+    type: object
+  - name: nodeVersions
+    type: object
+
+stages:
+  - stage: ${{ parameters.name }}
+    displayName: Release NPM
+    jobs:
+      - template: ../jobs/common-release.azure-pipelines.yml
+        parameters:
+          name: ${{ parameters.name }}_release
+          vmImages: ${{ parameters.vmImages }}
+          nodeVersions: ${{ parameters.nodeVersions }}
+          gitVarGroup: github
+          gitNameEnvName: GITHUB_GITNAME
+          gitEmailEnvName: GITHUB_GITEMAIL
+          gitPatVarName: GitHub.GitPat
+          defaultNpmVarGroup: npm
+          defaultNpmRegistryEnvName: NPM_NPMREGISTRY
+          defaultNpmTokenVarName: Npm.NpmToken

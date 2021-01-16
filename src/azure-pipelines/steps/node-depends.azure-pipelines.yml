@@ -1,5 +1,0 @@
-steps:
-  - pwsh: |
-      # Install
-      npm install; if (-not $?) { throw }
-    displayName: Install dependencies for Node.js

@@ -5,13 +5,11 @@ parameters:
 extends:
   template: pipelines/${{ parameters.pipeline }}.azure-pipelines.yml
   parameters:
-    vmImage: ubuntu-latest
     vmImages:
       - ubuntu-latest
       - windows-latest
       - macOS-latest
-    nodeVersion: "15.x"
     nodeVersions:
+      - "15.4" # 15.6 bugs with npm publish
       - "12.x"
       - "14.x"
-      - "15.x"

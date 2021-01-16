@@ -1,0 +1,16 @@
+parameters:
+  - name: vmImages
+    type: object
+  - name: nodeVersions
+    type: object
+
+stages:
+  - template: ../stages/node-test.azure-pipelines.yml
+    parameters:
+      vmImages: ${{ parameters.vmImages }}
+      nodeVersions: ${{ parameters.nodeVersions }}
+  - template: ../stages/node-release.azure-pipelines.yml
+    parameters:
+      name: release
+      vmImages: ${{ parameters.vmImages }}
+      nodeVersions: ${{ parameters.nodeVersions }}

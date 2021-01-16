@@ -11,7 +11,7 @@ stages:
       - template: ../jobs/node-every.azure-pipelines.yml
         parameters:
           steps:
-            - template: ../steps/node-depends.azure-pipelines.yml
+            - template: ../steps/node-deps.azure-pipelines.yml
             - template: ../steps/node-test.azure-pipelines.yml
           vmImages: ${{ parameters.vmImages }}
           nodeVersions: ${{ parameters.nodeVersions }}

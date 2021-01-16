@@ -1,10 +1,10 @@
 parameters:
-  - name: steps
-    type: stepList
   - name: vmImages
     type: object
   - name: nodeVersions
     type: object
+  - name: steps
+    type: stepList
 
 jobs:
   - ${{ each vmImage in parameters.vmImages }}:

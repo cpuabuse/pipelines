@@ -1,0 +1,16 @@
+parameters:
+  - name: relativePath
+    type: string
+    default: ./
+
+steps:
+  - pwsh: |
+      # Push
+      Push-Location -Path ${{ parameters.relativePath }}
+
+      # Install
+      npm install; if (-not $?) { throw }
+
+      # Pop
+      Pop-Location
+    displayName: Install dependencies for Node.js

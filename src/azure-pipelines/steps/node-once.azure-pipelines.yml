@@ -1,0 +1,8 @@
+parameters:
+  - name: nodeVersions
+    type: object
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: ${{ parameters.nodeVersions[0] }}

@@ -1,0 +1,46 @@
+# # node-release-publish deployment job list
+#
+# ## About
+#
+# Publishes to NPM.
+
+parameters:
+  - name: relativePath
+    type: string
+    default: ./
+  - name: npmRegistryEnvName
+    type: string
+  - name: npmTag
+    type: string
+    default: latest
+  - name: npmTokenVarName
+    type: string
+
+steps:
+  - pwsh: |
+      # Push
+      Push-Location -Path ${{ parameters.relativePath }}
+
+      # Variables
+      [ValidateNotNullOrEmpty()][String]$NPMRCPath = ".npmrc"
+
+      # Replace NPM config
+      Add-Content -Path $NPMRCPath -Value "//$env:${{ parameters.npmRegistryEnvName }}/:_authToken=$env:NPM_TOKEN"
+      Add-Content -Path $NPMRCPath -Value "registry=https://$env:${{ parameters.npmRegistryEnvName }}"
+      Add-Content -Path $NPMRCPath -Value "always-auth=true"
+
+      # Actions with token present
+      try {
+        # Publish to NPM
+        npm publish --tag ${{ parameters.npmTag }}; if (-not $?) { throw }
+      }
+      finally{
+        # Finally, remove config with token, just in case
+        Remove-Item -Path $NPMRCPath -Force
+      }
+
+      # Pop
+      Pop-Location
+    displayName: Publish NPM
+    env:
+      NPM_TOKEN: $(${{ parameters.npmTokenVarName }})
