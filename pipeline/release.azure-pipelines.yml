@@ -3,6 +3,9 @@ name: $(Build.DefinitionName)_$(SourceBranchName)_$(BuildID)
 variables:
   - group: azure-devops
 
+pool:
+  vmImage: 'ubuntu-latest'
+
 steps:
   - pwsh: |
       git config user.name $env:AZUREDEVOPS_GITNAME; if (-not $?) { throw }
