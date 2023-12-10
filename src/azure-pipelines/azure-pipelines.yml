@@ -10,6 +10,6 @@ extends:
       - windows-latest
       - macOS-latest
     nodeVersions:
-      - "15.4" # 15.6 bugs with npm publish
-      - "12.x"
-      - "14.x"
+      - "20.x"
+      - "18.x"
+      - "16.x"
